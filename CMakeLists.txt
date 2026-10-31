@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 # Set your project name. This will be the name of your SKSE .dll file.
-project(HelloWorld VERSION 0.0.1 LANGUAGES CXX)
+project(IngredientExporter VERSION 0.0.1 LANGUAGES CXX)
 
 # #
 # YOU DO NOT NEED TO EDIT ANYTHING BELOW HERE
@@ -31,7 +31,17 @@ endif()
 # set(OUTPUT_FOLDER "C:/path/to/any/folder")
 
 # Setup your SKSE plugin as an SKSE plugin!
-find_package(CommonLibSSE CONFIG REQUIRED)
+# CommonLibSSE-NG is vendored as a git submodule (alandtse fork) because the
+# original CharmedBaryon library the template used is unmaintained and cannot
+# read the "format-5" Address Library that Skyrim 1.7.x (1.7.104) uses.
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)        # don't build CommonLibSSE's Catch2 tests
+set(ENABLE_SKYRIM_VR OFF CACHE BOOL "" FORCE)   # skip VR (and its large openvr submodule)
+add_subdirectory(lib/commonlibsse-ng)
+# The from-source build path of CommonLibSSE-NG doesn't include its consumer helper
+# (it's only include()d in the prebuilt-binary branch), so pull it in explicitly to
+# get the add_commonlibsse_plugin() function. The CommonLibSSE::CommonLibSSE target
+# it links against is created by the add_subdirectory() above.
+include("${CMAKE_CURRENT_SOURCE_DIR}/lib/commonlibsse-ng/cmake/CommonLibSSE.cmake")
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES plugin.cpp) # <--- specifies plugin.cpp
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 standard
 target_precompile_headers(${PROJECT_NAME} PRIVATE PCH.h) # <--- PCH.h is required!

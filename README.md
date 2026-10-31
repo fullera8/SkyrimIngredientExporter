@@ -1,107 +1,78 @@
-> 📜 other templates available at https://github.com/SkyrimScripting/SKSE_Templates
+# Skyrim Ingredient Exporter
 
-# SKSE "Hello, world!"
+> 🎮 **A personal hobby project — just for fun.**
+> This is a weekend Skyrim mod I built for my own alchemy habit. It is **not** a work
+> project, not affiliated with or endorsed by my employer, and comes with no warranty or
+> support. Play with it, fork it, break it. 🐉
 
-Very simple C++ SKSE plugin for Skyrim!
+A tiny [SKSE](https://skse.silverlock.org/) plugin for **Skyrim Special Edition** that dumps
+your carried alchemy **ingredients** to a JSON file so you (or an AI assistant) can get
+potion/alchemy recommendations from it.
 
----
+## What it does
 
-- [SKSE "Hello, world!"](#skse-hello-world)
-- [What does it do?](#what-does-it-do)
-- [CommonLibSSE NG](#commonlibsse-ng)
-- [Requirements](#requirements)
-  - [Opening the project](#opening-the-project)
-- [Project setup](#project-setup)
-  - [Finding Your "`mods`" Folder](#finding-your-mods-folder)
-- [Setup your own repository](#setup-your-own-repository)
-- [Sharing is Caring](#sharing-is-caring)
+Press **F8** in-game and the plugin writes every alchemy ingredient in your inventory —
+name, count, and its (up to four) effect names — to:
 
-# What does it do?
+```
+Documents\My Games\Skyrim Special Edition\SKSE\IngredientExporter_Inventory.json
+```
 
-After running Skyrim, once at the Main Menu, press the `~` key to open the game console.
+Example entry:
 
-You will see that we printed `"Hello, world!"` to the console at the Main Menu 🐉
+```json
+{ "name": "Blue Mountain Flower", "count": 32,
+  "effects": ["Restore Health", "Fortify Conjuration", "Fortify Health", "Damage Magicka Regen"] }
+```
 
-# CommonLibSSE NG
+The file is overwritten each time you press F8, so it always reflects your current inventory.
 
-Because this uses [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG), it supports Skyrim SE, AE, GOG, and VR.
+> Note: the dump lists *all* of each ingredient's effects, including ones you haven't
+> discovered in-game yet. Combining the ingredients still works; the Alchemy menu just
+> won't *show* an effect until you've learned it.
 
-[CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG) is a fork of the popular [powerof3 fork](https://github.com/powerof3/CommonLibSSE) of the _original_ `CommonLibSSE` library created by [Ryan McKenzie](https://github.com/Ryan-rsm-McKenzie) in [2018](https://github.com/Ryan-rsm-McKenzie/CommonLibSSE/commit/224773c424bdb8e36c761810cdff0fcfefda5f4a).
+## Requirements
 
-# Requirements
+- Skyrim Special Edition **1.7.104** (built/tested against this runtime)
+- **SKSE64** 2.3.1
+- **Address Library for SKSE Plugins** (for the 1.7.x / format-5 database)
 
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) (_the free Community edition_)
-- [`vcpkg`](https://github.com/microsoft/vcpkg)
-  - 1. Clone the repository using git OR [download it as a .zip](https://github.com/microsoft/vcpkg/archive/refs/heads/master.zip)
-  - 2. Go into the `vcpkg` folder and double-click on `bootstrap-vcpkg.bat`
-  - 3. Edit your system or user Environment Variables and add a new one:
-    - Name: `VCPKG_ROOT`  
-      Value: `C:\path\to\wherever\your\vcpkg\folder\is`
+## Install (Vortex)
 
-<img src="https://raw.githubusercontent.com/SkyrimDev/Images/main/images/screenshots/Setting%20Environment%20Variables/VCPKG_ROOT.png" height="150">
+1. Grab `IngredientExporter-*.zip` (from the Releases page, or build it yourself below).
+2. In Vortex: **Mods → Install From File**, pick the zip, then **Enable** and **Deploy**.
+3. Launch the game through SKSE, load a save, and press **F8**.
 
-## Opening the project
+The archive installs `SKSE/Plugins/IngredientExporter.dll` into your game's `Data` folder,
+so it also works with Mod Organizer 2 or a manual drop into `Data\SKSE\Plugins\`.
 
-Once you have Visual Studio 2022 installed, you can open this folder in basically any C++ editor, e.g. [VS Code](https://code.visualstudio.com/) or [CLion](https://www.jetbrains.com/clion/) or [Visual Studio](https://visualstudio.microsoft.com/)
-- > _for VS Code, if you are not automatically prompted to install the [C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) and [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extensions, please install those and then close VS Code and then open this project as a folder in VS Code_
+## Build from source
 
-You may need to click `OK` on a few windows, but the project should automatically run CMake!
+The build is standard [CommonLibSSE-NG](https://github.com/alandtse/CommonLibSSE-NG) +
+CMake + vcpkg, with two machine-specific notes:
 
-It will _automatically_ download [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG) and everything you need to get started making your new plugin!
+- **MSVC v143 toolset** is required. Newer toolsets (VS2026 / 14.5x) drop an STL symbol the
+  dependencies need, so `cmake/x64-windows-static.cmake` pins vcpkg to toolset **14.44**;
+  configure from a v143 developer environment (`vcvars64.bat -vcvars_ver=14.44`).
+- CommonLibSSE-NG is vendored as a **submodule**, so clone recursively.
 
-# Project setup
+```bash
+git clone --recursive https://github.com/fullera8/SkyrimIngredientExporter.git
+cd SkyrimIngredientExporter
+# set VCPKG_ROOT to your vcpkg checkout, and (optional) SKYRIM_FOLDER to auto-deploy the DLL
+cmake --preset release
+cmake --build build/release
+```
 
-By default, when this project compiles it will output a `.dll` for your SKSE plugin into the `build/` folder.
+The built DLL lands in `build/release/IngredientExporter.dll` (and is copied into
+`%SKYRIM_FOLDER%\Data\SKSE\Plugins\` when `SKYRIM_FOLDER` is set).
 
-If you want to configure this project to output your plugin files
-into your Skyrim Special Edition's "`Data`" folder:
+## License
 
-- Set the `SKYRIM_FOLDER` environment variable to the path of your Skyrim installation  
-  e.g. `C:\Program Files (x86)\Steam\steamapps\common\Skyrim Special Edition`
+**GPL-3.0-or-later.** This plugin links [alandtse/CommonLibSSE-NG](https://github.com/alandtse/CommonLibSSE-NG),
+which is GPL-3.0-or-later, so the distributed plugin is GPL-3.0 too. See [LICENSE](LICENSE).
 
-<img src="https://raw.githubusercontent.com/SkyrimDev/Images/main/images/screenshots/Setting%20Environment%20Variables/SKYRIM_FOLDER.png" height="150">
+## Credits
 
-If you want to configure this project to output your plugin files
-into your "`mods`" folder:  
-(_for Mod Organizer 2 or Vortex_)
-
-- Set the `SKYRIM_MODS_FOLDER` environment variable to the path of your mods folder:  
-  e.g. `C:\Users\<user>\AppData\Local\ModOrganizer\Skyrim Special Edition\mods`  
-  e.g. `C:\Users\<user>\AppData\Roaming\Vortex\skyrimse\mods`
-
-<img src="https://raw.githubusercontent.com/SkyrimDev/Images/main/images/screenshots/Setting%20Environment%20Variables/SKYRIM_MODS_FOLDER.png" height="150">
-
-## Finding Your "`mods`" Folder
-
-In Mod Organizer 2:
-
-> Click the `...` next to "Mods" to get the full folder path
-
-<img src="https://raw.githubusercontent.com/SkyrimDev/Images/main/images/screenshots/MO2/MO2SettingsModsFolder.png" height="150">
-
-In Vortex:
-
-<img src="https://raw.githubusercontent.com/SkyrimDev/Images/main/images/screenshots/Vortex/VortexSettingsModsFolder.png" height="150">
-
-# Setup your own repository
-
-If you clone this template on GitHub, please:
-
-- Go into `LICENSE` and change the year and change `<YOUR NAME HERE>` to your name.
-- Go into `CODE_OF_CONDUCT.md` and change `<YOUR CONTACT INFO HERE>` to your contact information.
-
-The `LICENSE` defaults to using the [MIT License](https://choosealicense.com/licenses/mit/), a permissive license which is used by many popular Skyrim mods (_including [CommonLibSSE](https://github.com/Ryan-rsm-McKenzie/CommonLibSSE)_).
-
-The `CODE_OF_CONDUCT.md` defaults to using the [Contributor Covenant](https://www.contributor-covenant.org/), the most popular code of conduct for open source communities.
-
-If you'd like to know more about open source licenses, see:
-- [Licensing a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
-- [Choose an open source license](https://choosealicense.com/)
-
-# Sharing is Caring
-
-**If you use this template, PLEASE release your project as a public open source project.** 💖
-
-**Please do not release your SKSE plugin on Nexus/etc without making the source code available** \*
-
-> \* _You do you. But please help our community by sharing your source `<3`_
+- [CommonLibSSE-NG](https://github.com/alandtse/CommonLibSSE-NG) (alandtse fork) — the library that makes SKSE plugins possible across game versions.
+- [SkyrimScripting SKSE templates](https://github.com/SkyrimScripting/SKSE_Templates) — the starting point.
